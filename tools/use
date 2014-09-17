@@ -1,0 +1,71 @@
+#!/bin/bash
+BIN_DIR="$(cd $(dirname ${BASH_SOURCE[0]}) && pwd)"
+source $BIN_DIR/.env
+
+# Defer expansion of environment vars to the aliases are easier to read.
+alias cd-home="cd \$PROJ_DIR"
+alias cd-tools="cd \$PROJ_DIR/tools"
+
+deactivate () {
+    if [ -n "$_OLD_PATH" ] ; then
+        export PATH="$_OLD_PATH"
+        unset _OLD_PATH
+    fi
+
+    if [ -n "$_OLD_PS1" ] ; then
+        export PS1="$_OLD_PS1"
+        unset _OLD_PS1
+    fi
+
+    unset -f deactivate
+    unalias $(cd-commands)
+}
+
+if [ -z "$_OLD_PATH" ]; then
+    _OLD_PATH="$PATH"
+fi
+
+export PATH="$BIN_DIR:$_OLD_PATH"
+
+if [ -z "$_OLD_PS1" ]; then
+    _OLD_PS1="$PS1"
+fi
+export PS1="($PROJECT)$_OLD_PS1"
+
+display-command () {
+    command=$1; shift
+    description=$1; shift
+    if [[ "$description" == "" ]]; then
+        return
+    fi
+    echo "$(printf "%-20s" "$command") $description"
+}
+
+cd-commands () {
+    alias | grep --color=never "cd-" | sed -e 's/^alias //' | sed -e 's/=.*//' | sort
+}
+
+show-commands () {
+    echo "Commands available in the $PROJECT project:"
+    echo
+
+    for a in $(cd-commands); do
+        HELP=$(alias $a | sed -e 's/^.*=.//' | sed -e 's/.$//')
+        echo "$(printf "%-20s" $a) $HELP"
+    done
+
+    echo
+
+    display-command deactivate "Deactivate this project environment."
+    display-command show-commands "Show this helpful message."
+
+    echo
+
+    for prog in $(find $BIN_DIR -maxdepth 1 -perm +111 -type f | sort); do
+        HELP=$(grep '^#.*\-\-\-' $prog | sed 's/^.*\-\-\- //')
+
+        display-command "$(basename $prog)" "$HELP"
+    done
+}
+
+show-commands

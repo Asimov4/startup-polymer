@@ -1,0 +1,14 @@
+{
+  "name": "startup-polymer",
+  "description": "",
+  "homepage": "",
+  "keywords": [],
+  "author": "",
+  "private": true,
+  "dependencies": {
+    "polymer": "Polymer/polymer",
+    "core-elements": "Polymer/core-elements",
+    "paper-elements": "Polymer/paper-elements",
+    "font-roboto": "Polymer/font-roboto"
+  }
+}
